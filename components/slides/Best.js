@@ -1,102 +1,90 @@
+import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
+
 class BestProductComponent extends HTMLElement {
-  connectedCallback() {
-    // 신상품 데이터
-    const products = [
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 1",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 2",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 3",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 4",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 5",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 6",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 7",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 8",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 9",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 10",
-        price: "1,000,000원",
-        tag: "BEST",
-      },
-    ];
+  constructor() {
+    super();
+    this.products = [];
+  }
 
-    // HTML 구조 생성
+  async connectedCallback() {
+    try {
+      // 데이터 가져오기
+      const allProducts = await fetchProducts();
+
+      // `tag` 배열에 `BEST`가 포함된 상품만 필터링
+      this.products = Object.values(allProducts).filter((product) =>
+        product.tag.includes("BEST")
+      );
+
+      this.render();
+      this.addEventListeners();
+    } catch (error) {
+      console.error("Failed to load best products:", error);
+      this.innerHTML = `<p>베스트셀러 데이터를 불러오는 데 실패했습니다.</p>`;
+    }
+  }
+
+  render() {
     this.innerHTML = `
-            <div class="swiper-text">
-            <span>베스트셀러</span>
-            <span>황금단에서 인기있는 상품</span>
-            </div>
-        <div class="newProducts">
-  
-          ${products
-            .map(
-              (product) => `
-              <div class="newProduct">
-                <img src="${product.image}" alt="${product.name}" class="newProduct-image">
-                <div class="bestProduct-info">
-                  <div>
-                    <span>${product.name}</span>
-                    <span>${product.tag}</span>
-                  </div>
-                  <span>${product.price}</span>
-                </div>
-                <div class="newProduct-wishlistIcon">
-                  <i class="fa fa-heart"></i>
-                  
-                </div>
-              </div>
-              
-            `
-            )
-
-            .join("")}
+      <div class="best-product-container">
+        <!-- 제목 -->
+        <div class="swiper-text">
+          <span>베스트셀러</span>
+          <span>황금단에서 인기있는 상품</span>
+        </div>
         
+        <!-- 상품 리스트 -->
+        <div class="Products">
+          ${this.renderProducts()}
+        </div>
+      </div>
+    `;
+  }
+
+  // 베스트셀러 리스트 렌더링
+  renderProducts() {
+    if (this.products.length === 0) {
+      return `<p>등록된 베스트셀러 상품이 없습니다.</p>`;
+    }
+
+    return this.products
+      .map(
+        (product) => `
+          <div class="product-card" data-id="${product.id}">
+            <div class="product-image-wrapper">
+            <img src="${product.images[0]}" alt="${
+          product.name
+        }" class="product-image" />
+              <div class="hover-icons">
+                <i class="fa fa-heart wish-icon"></i>
+                <i class="fa fa-shopping-cart cart-icon"></i>
+              </div>
             </div>
-      `;
+            
+            <div class="product-info">
+              <span>${product.name}</span>          
+              <span class="price">${product.price.toLocaleString()} 원</span>
+              <span class="bestTag">${
+                product.tag.find((tag) => tag === "BEST") || ""
+              }</span>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  // 이벤트 추가
+  addEventListeners() {
+    const bestProductElements = this.querySelectorAll(".product-card");
+    bestProductElements.forEach((productElement) => {
+      productElement.addEventListener("click", (e) => {
+        const productId = e.currentTarget.dataset.id;
+        if (productId) {
+          window.location.href = `product.html?id=${productId}`;
+        }
+      });
+    });
   }
 }
 

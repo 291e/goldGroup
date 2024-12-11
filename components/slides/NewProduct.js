@@ -1,133 +1,93 @@
+import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
+
 class NewProductComponent extends HTMLElement {
-  connectedCallback() {
-    // 신상품 데이터
-    const products = [
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 1",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 2",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 3",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 4",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 5",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 6",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 7",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 8",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product01.jpg",
-        name: "New Product 9",
-        price: "1,000,000원",
-        tag: "new",
-      },
-      {
-        image: "public/product/product02.jpg",
-        name: "New Product 10",
-        price: "1,000,000원",
-        tag: "new",
-      },
-    ];
+  constructor() {
+    super();
+    this.products = [];
+  }
 
-    // HTML 구조 생성
+  async connectedCallback() {
+    try {
+      // 데이터 가져오기
+      const allProducts = await fetchProducts();
+
+      // `tag` 배열에 `NEW`가 포함된 상품만 필터링
+      this.products = Object.values(allProducts).filter((product) =>
+        product.tag.includes("NEW")
+      );
+
+      this.render();
+      this.addEventListeners();
+    } catch (error) {
+      console.error("Failed to load new products:", error);
+      this.innerHTML = `<p>신상품 데이터를 불러오는 데 실패했습니다.</p>`;
+    }
+  }
+
+  render() {
     this.innerHTML = `
-            <div class="swiper-text">
-            <span>신상품</span>
-            <span>황금단에서 선보이는 신상품</span>
-            </div>
-        <div class="newProducts">
-  
-          ${products
-            .map(
-              (product) => `
-              <div class="newProduct">
-                <img src="${product.image}" alt="${product.name}" class="newProduct-image">
-                <div class="newProduct-info">
-                  <div>
-                    <span>${product.name}</span>
-                    <span>${product.tag}</span>
-                  </div>
-                  <span>${product.price}</span>
-                </div>
-                <div class="newProduct-wishlistIcon">
-                  <i class="fa fa-heart"></i>
-                  
-                </div>
-              </div>
-              
-            `
-            )
-
-            .join("")}
+      <div class="new-product-container">
+        <!-- 제목 -->
+        <div class="swiper-text">
+          <span>신상품</span>
+          <span>황금단에서 선보이는 신상품</span>
+        </div>
         
+        <!-- 상품 리스트 -->
+        <div class="Products">
+          ${this.renderProducts()}
+        </div>
+      </div>
+    `;
+  }
+
+  // 신상품 리스트 렌더링
+  renderProducts() {
+    if (this.products.length === 0) {
+      return `<p>등록된 신상품이 없습니다.</p>`;
+    }
+
+    return this.products
+      .map(
+        (product) => `
+          <div class="product-card" data-id="${product.id}">
+            <div class="product-image-wrapper">
+            <img src="${product.images[0]}" alt="${
+          product.name
+        }" class="product-image" />
+              <div class="hover-icons">
+                <i class="fa fa-heart wish-icon"></i>
+                <i class="fa fa-shopping-cart cart-icon"></i>
+              </div>
             </div>
-      `;
+            
+            <div class="product-info">
+              <span>${product.name}</span>          
+              <span class="price">${product.price.toLocaleString()} 원</span>
+              <span class="newTag">${
+                product.tag.find((tag) => tag === "NEW") || ""
+              }</span>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  // 이벤트 추가
+  addEventListeners() {
+    const newProductElements = this.querySelectorAll(".newProduct");
+    newProductElements.forEach((productElement) => {
+      productElement.addEventListener("click", (e) => {
+        const productId = e.currentTarget.dataset.id;
+        if (productId) {
+          window.location.href = `product.html?id=${productId}`;
+        }
+      });
+    });
   }
 }
 
 customElements.define("new-product-component", NewProductComponent);
-
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("fade-in-visible"); // 컴포넌트가 보이면 애니메이션 클래스 추가
-      } else {
-        entry.target.classList.remove("fade-in-visible"); // 보이지 않으면 클래스 제거
-      }
-    });
-  },
-  {
-    threshold: 0.1, // 10%만 보이면 애니메이션 실행
-  }
-);
-
-document
-  .querySelectorAll("new-product-component")
-  .forEach((component) => observer.observe(component));
-document
-  .querySelectorAll("best-product-component")
-  .forEach((component) => observer.observe(component));
-document
-  .querySelectorAll("review-slider-component")
-  .forEach((component) => observer.observe(component));
-document
-  .querySelectorAll("longBanner-text")
-  .forEach((component) => observer.observe(component));
 
 export default NewProductComponent;

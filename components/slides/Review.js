@@ -3,6 +3,7 @@ class ReviewSliderComponent extends HTMLElement {
     // 후기 데이터
     const reviews = [
       {
+        id: 1,
         image: "public/product/product01.jpg",
         title: "Excellent Service",
         content:
@@ -11,6 +12,7 @@ class ReviewSliderComponent extends HTMLElement {
         stars: 5,
       },
       {
+        id: 2,
         image: "public/product/product02.jpg",
         title: "Amazing Experience",
         content:
@@ -19,7 +21,8 @@ class ReviewSliderComponent extends HTMLElement {
         stars: 5,
       },
       {
-        image: "public/product/product01.jpg",
+        id: 3,
+        image: "public/product/product03.jpg",
         title: "Very Satisfied",
         content:
           "Absolutely loved it! The team was helpful, and the product is top-notch.",
@@ -27,27 +30,12 @@ class ReviewSliderComponent extends HTMLElement {
         stars: 5,
       },
       {
-        image: "public/product/product02.jpg",
+        id: 4,
+        image: "public/product/product04.jpg",
         title: "Highly Recommend",
         content:
           "Great service, amazing products! Will definitely come back again.",
         name: "Michael Brown",
-        stars: 5,
-      },
-      {
-        image: "public/product/product01.jpg",
-        title: "Outstanding Quality",
-        content:
-          "The quality is just outstanding! I'm really happy with my purchase.",
-        name: "Laura Wilson",
-        stars: 5,
-      },
-      {
-        image: "public/product/product02.jpg",
-        title: "Fantastic!",
-        content:
-          "Everything was perfect. I couldn't ask for more. Highly satisfied.",
-        name: "Chris Green",
         stars: 5,
       },
     ];
@@ -64,7 +52,7 @@ class ReviewSliderComponent extends HTMLElement {
                 .map(
                   (review) => `
                 <div class="swiper-slide review">
-                  <div class="review-image-wrapper">
+                  <div class="review-image-wrapper" data-id="${product.id}">
                     <img src="${review.image}" alt="${
                     review.name
                   }" class="review-image" />

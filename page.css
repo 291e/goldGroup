@@ -77,6 +77,7 @@
 /* 콘텐츠 영역 */
 .brand-content {
   display: none;
+  padding: 0 20px;
 }
 
 .brand-content:not(.hidden) {
@@ -137,10 +138,10 @@
 }
 
 .product-image-wrapper {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  position: relative;
   overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1 / 1.5;
 }
 
 .product-image {
@@ -167,7 +168,6 @@
 
 .thumbnail.active,
 .thumbnail:hover {
-  border-color: #0078ff;
   transform: scale(1.1);
 }
 
@@ -287,8 +287,10 @@
 
 .upload-flex {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
 }
 
 .label-result-section {
@@ -298,9 +300,11 @@
 
 .label-upload {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 20px;
+  height: 100px;
+  width: 100%;
 }
 
 .label-upload input[type="file"] {
@@ -311,7 +315,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  justify-content: center;
   gap: 10px;
 }
 
@@ -321,22 +325,50 @@
   border-radius: 20px;
   display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   cursor: pointer;
-  background-image: url(public/product/face.png);
+  width: 100px;
   background-size: cover; /* Ensures the image covers the container */
   background-position: center; /* Centers the image */
   background-repeat: no-repeat;
-  width: 100%;
+}
+
+#upload-icon {
+  display: flex;
+}
+
+.upload-ui i {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px #353535 solid;
+  border-radius: 50%;
+}
+
+.generate {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 
 .generate-btn {
   background-color: #000;
   color: #fff;
   border: none;
-  padding: 10px 20px;
+  padding: 10px;
+  width: 150px;
   cursor: pointer;
   border-radius: 4px;
+}
+
+.meta-style img {
+  display: flex;
+  width: 150px;
+  height: auto;
 }
 
 .generate-btn:hover {
@@ -348,11 +380,102 @@
   border-radius: 20px;
   display: flex;
   align-items: center;
-  justify-items: center;
+  justify-content: center;
   cursor: pointer;
   width: 300px;
   height: auto;
   min-height: 300px;
+}
+
+#generated-image {
+  object-fit: contain; /* 이미지 비율 유지 */
+  border-radius: 20px; /* 모서리 둥글게 */
+}
+
+/* 스크롤 메뉴 */
+.product-scroll {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.scroll-menu {
+  margin: 100px 0;
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+
+.scroll-menu button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: 1px solid #eee;
+  flex: 1;
+}
+
+.product-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+#detail-section,
+#info-section,
+#review-section,
+#qa-section {
+  scroll-margin-top: 250px;
+}
+
+.detail-image {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.detail-image img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.info-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.info-column {
+  flex: 1;
+  font-size: 12px;
+}
+
+.info-column h3 {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.info-column p,
+.info-column ul {
+  line-height: 1.6;
+  margin: 5px 0;
+}
+
+.info-column ul {
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+.divider {
+  width: 1px;
+  background-color: #ddd;
+  margin: 0 20px;
 }
 
 /* 반응형 디자인 */
@@ -369,5 +492,12 @@
 
   .thumbnail-wrapper {
     justify-content: center;
+  }
+  .product-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .info-column {
+    font-size: 9px;
   }
 }

@@ -1,29 +1,29 @@
 class HeaderComponent extends HTMLElement {
   connectedCallback() {
-    // 메뉴 데이터 배열
     const menuItems = [
       { name: "BRAND", link: "brand.html" },
-      { name: "혼주한복", link: "honju.html" },
-      { name: "신랑신부한복", link: "wedding.html" },
-      { name: "여성한복", link: "women.html" },
-      { name: "아동한복", link: "children.html" },
-      { name: "돌잔치한복", link: "firstbirthday.html" },
-      { name: "맞춤한복", link: "custom.html" },
-      { name: "생활한복", link: "daily.html" },
+      { name: "혼주한복", link: "product/honju.html" },
+      { name: "신랑신부한복", link: "product/wedding.html" },
+      { name: "여성한복", link: "product/women.html" },
+      { name: "아동한복", link: "product/children.html" },
+      { name: "돌잔치한복", link: "product/firstbirthday.html" },
+      { name: "맞춤한복", link: "product/custom.html" },
+      { name: "생활한복", link: "product/daily.html" },
       { name: "화보촬영", link: "photoshoot.html" },
       { name: "협찬", link: "sponsorship.html" },
       { name: "COMMUNITY", link: "community.html" },
     ];
 
-    // 헤더 HTML 구조
     this.innerHTML = `
       <div class="header">
         <div class="inner">
-          
-          <nav class="menu">
-          <a href="/" class="logo-wrapper">
+          <!-- 로고 -->
+          <a href="http://goldsilk.metashopping.kr/goldGroup/" class="logo-wrapper">
             <img src="public/logo.jpg" alt="logo" class="logo" />
           </a>
+
+          <!-- 데스크톱 메뉴 -->
+          <nav class="menu">
             ${menuItems
               .map(
                 (item) =>
@@ -31,53 +31,60 @@ class HeaderComponent extends HTMLElement {
               )
               .join("")}
           </nav>
+
+          <!-- 햄버거 메뉴 -->
+          <div class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+
+        <!-- 모바일 메뉴 -->
+        <div class="mobile-menu">
+          ${menuItems
+            .map(
+              (item) =>
+                `<a href="${item.link}" class="mobile-menu-item">${item.name}</a>`
+            )
+            .join("")}
         </div>
       </div>
     `;
-  }
 
-  // HTML 페이지를 로드하여 렌더링
-  loadPage(link) {
-    const mainContent = document.querySelector("main"); // 렌더링할 컨테이너
-    fetch(link)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("페이지를 불러올 수 없습니다.");
-        }
-        return response.text();
-      })
-      .then((html) => {
-        mainContent.innerHTML = html; // 컨테이너에 HTML 삽입
-        window.history.pushState(null, "", link); // 브라우저 히스토리 업데이트
-      })
-      .catch((error) => {
-        mainContent.innerHTML =
-          "<h1>404: 페이지를 불러오는 데 실패했습니다.</h1>";
-        console.error(error);
-      });
+    // 햄버거 메뉴 클릭 이벤트
+    const hamburgerIcon = this.querySelector(".hamburger-icon");
+    const mobileMenu = this.querySelector(".mobile-menu");
+    hamburgerIcon.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
+
+    // 메뉴 외부 클릭 시 메뉴 닫기
+    document.addEventListener("click", (event) => {
+      const isClickInsideMenu =
+        mobileMenu.contains(event.target) ||
+        hamburgerIcon.contains(event.target);
+      if (!isClickInsideMenu) {
+        mobileMenu.classList.remove("open");
+      }
+    });
   }
 }
 
-// 컴포넌트 정의
 customElements.define("header-component", HeaderComponent);
 
 // 스크롤 이벤트
 window.addEventListener("scroll", () => {
+  const headerLayout = document.querySelector("header-component");
   const header = document.querySelector(".header");
   if (window.scrollY > 80) {
     header.classList.add("headerFixed");
+    headerLayout.classList.remove("headerPlace");
+    headerLayout.classList.add("headerPlaceFixed");
   } else {
     header.classList.remove("headerFixed");
-  }
-});
-
-// 스크롤 이벤트
-window.addEventListener("scroll", () => {
-  const headerLayout = document.querySelector("header-component");
-  if (window.scrollY < 80) {
     headerLayout.classList.add("headerPlace");
-  } else {
-    headerLayout.classList.remove("headerPlace");
+    headerLayout.classList.remove("headerPlaceFixed");
   }
 });
 

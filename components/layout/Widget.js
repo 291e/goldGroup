@@ -12,10 +12,32 @@ class WidgetComponent extends HTMLElement {
           </div>
         `;
 
+    // 스크롤 이동 함수
+    const smoothScroll = (target, callback) => {
+      const currentScroll = window.scrollY;
+      const distance = target - currentScroll;
+      const step = distance / 30; // 스크롤 단계
+      let currentStep = 0;
+
+      const scrollInterval = setInterval(() => {
+        if (
+          currentStep >= 30 ||
+          Math.abs(window.scrollY - target) < Math.abs(step)
+        ) {
+          clearInterval(scrollInterval);
+          window.scrollTo({ top: target });
+          if (callback) callback(); // 콜백 호출
+        } else {
+          window.scrollBy(0, step);
+          currentStep++;
+        }
+      }, 30);
+    };
+
     // 이벤트 리스너 등록
     this.querySelectorAll(".widget-button").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const action = e.target.dataset.action;
+        const action = e.currentTarget.dataset.action;
         switch (action) {
           case "kakao":
             alert("카카오톡 버튼 클릭");
@@ -30,13 +52,10 @@ class WidgetComponent extends HTMLElement {
             alert("유튜브 버튼 클릭");
             break;
           case "scroll-top":
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            smoothScroll(0);
             break;
           case "scroll-bottom":
-            window.scrollTo({
-              top: document.body.scrollHeight,
-              behavior: "smooth",
-            });
+            smoothScroll(document.body.scrollHeight);
             break;
           default:
             console.log("알 수 없는 동작");
@@ -46,15 +65,51 @@ class WidgetComponent extends HTMLElement {
 
     // 스크롤 이벤트 등록
     const widget = this.querySelector(".widget");
-    widget.style.display = "none"; // 초기 상태: 숨김
+    let widgetVisible = false; // 위젯 상태 플래그
+    let isScrolling = false; // 스크롤 동작 중인지 여부
 
-    window.addEventListener("scroll", () => {
-      if (window.scrollY > 100) {
-        widget.style.display = "flex"; // 스크롤 내리면 표시
-      } else {
-        widget.style.display = "none"; // 스크롤 위로 올라가면 숨김
+    const updateWidgetVisibility = () => {
+      if (!isScrolling) {
+        if (window.scrollY > 100) {
+          if (!widgetVisible) {
+            widget.style.display = "flex"; // 위젯 표시
+            widgetVisible = true;
+          }
+        } else {
+          if (widgetVisible) {
+            widget.style.display = "none"; // 위젯 숨김
+            widgetVisible = false;
+          }
+        }
       }
+    };
+
+    // 스크롤 이벤트 핸들러
+    window.addEventListener("scroll", updateWidgetVisibility);
+
+    // 스크롤 중 플래그 처리
+    const setScrollingFlag = (isScroll) => {
+      isScrolling = isScroll;
+      if (!isScroll) updateWidgetVisibility(); // 플래그 해제 시 위젯 상태 확인
+    };
+
+    // Smooth Scroll에 플래그 처리
+    this.querySelectorAll(
+      "[data-action='scroll-top'], [data-action='scroll-bottom']"
+    ).forEach((button) => {
+      button.addEventListener("click", () => {
+        setScrollingFlag(true);
+        smoothScroll(
+          button.dataset.action === "scroll-top"
+            ? 0
+            : document.body.scrollHeight,
+          () => setScrollingFlag(false)
+        );
+      });
     });
+
+    // 초기 위젯 상태 설정
+    updateWidgetVisibility();
   }
 }
 

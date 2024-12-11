@@ -1,23 +1,7 @@
 class InstagramComponent extends HTMLElement {
   connectedCallback() {
     // 인스타그램 데이터 (이미지 URL)
-    const images = [
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-      "https://picsum.photos/200/200",
-    ];
+    const images = ["https://picsum.photos/200/200"];
 
     // HTML 구조 생성
     this.innerHTML = `

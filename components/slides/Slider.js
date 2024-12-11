@@ -12,8 +12,12 @@ class SliderComponent extends HTMLElement {
             <div class="slides">
               ${images.map((src) => `<img src="${src}" alt="Slide">`).join("")}
             </div>
-            <button class="prev">&lt;</button>
-            <button class="next">&gt;</button>
+            <button class="prev">
+            <i class="fa-solid fa-circle-chevron-left"></i>
+            </button>
+            <button class="next">
+            <i class="fa-solid fa-circle-chevron-right"></i>
+            </button>
             <div class="pagination">
               <span class="page-indicator">1 / ${images.length}</span>
             </div>

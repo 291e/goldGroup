@@ -9,6 +9,9 @@ import NewProductComponent from "./slides/NewProduct.js";
 import RecommendComponent from "./slides/Recommend.js";
 import ReviewSliderComponent from "./slides/Review.js";
 import SliderComponent from "./slides/Slider.js";
+import BrandInfoComponent from "./BrandInfo.js";
+
+/* 위젯 */
 
 const observer = new IntersectionObserver(
   (entries) => {
@@ -35,7 +38,8 @@ document
   .querySelectorAll("review-slider-component")
   .forEach((component) => observer.observe(component));
 document
-  .querySelectorAll("longBanner-text")
+  .querySelectorAll(".longBanner-text")
   .forEach((component) => observer.observe(component));
-
-/* 위젯 */
+document
+  .querySelectorAll("brandInfo-component")
+  .forEach((component) => observer.observe(component));
