@@ -38,49 +38,56 @@ class ReviewSliderComponent extends HTMLElement {
         name: "Michael Brown",
         stars: 5,
       },
+      // 필요한 경우 더 많은 리뷰 추가
     ];
+
+    // 최신 10개 리뷰만 가져오기
+    const limitedReviews = reviews.slice(0, 10);
 
     // HTML 구조 생성
     this.innerHTML = `
-               <div class="swiper-text">
-            <span>고객후기</span>
-            <span>상품을 이용하신 고객님들의 리얼 후기입니다!</span>
+      <div class="swiper-text">
+        <span>고객후기</span>
+        <span>상품을 이용하신 고객님들의 리얼 후기입니다!</span>
+      </div>
+      <div class="swiper review-slider">
+        <div class="swiper-wrapper">
+          ${limitedReviews
+            .map(
+              (review) => `
+            <div class="swiper-slide review">
+              <div class="review-image-wrapper">
+                <img src="${review.image || "public/default-image.jpg"}" alt="${
+                review.name || "고객님"
+              }" class="review-image" />
+              </div>
+              <div class="review-text">
+                <span class="review-title">${review.title || "제목 없음"}</span>
+                <span class="review-content">${
+                  review.content || "후기 내용이 없습니다."
+                }</span>
+                <span class="review-name">${review.name || "익명의 고객"}</span>
+              </div>
+              <div class="review-name-line"></div>
+              <div class="review-stars">
+                ${"★".repeat(review.stars || 0)}${"☆".repeat(
+                5 - (review.stars || 0)
+              )}
+              </div>
             </div>
-          <div class="swiper review-slider">
-            <div class="swiper-wrapper">
-              ${reviews
-                .map(
-                  (review) => `
-                <div class="swiper-slide review">
-                  <div class="review-image-wrapper" data-id="${product.id}">
-                    <img src="${review.image}" alt="${
-                    review.name
-                  }" class="review-image" />
-                  </div>
-                  <div class="review-text">
-                    <span class="review-title">${review.title}</span>
-                    <span class="review-content">${review.content}</span>
-                    <span class="review-name">${review.name}</span>
-                  </div>
-                  <div class="review-name-line"></div>
-                    <div class="review-stars">
-                      ${"★".repeat(review.stars)}${"☆".repeat(5 - review.stars)}
-                    </div>
-                  
-                </div>
-              `
-                )
-                .join("")}
-            </div>
-            <!-- 네비게이션 버튼 -->
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
-          </div>
-        `;
+          `
+            )
+            .join("")}
+        </div>
+        <!-- 네비게이션 버튼 -->
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+      </div>
+    `;
 
     // Swiper 초기화
     new Swiper(".review-slider", {
-      slidesPerView: 5, // 한 화면에 보이는 슬라이드 수
+      slidesPerView: 3, // 한 화면에 보이는 슬라이드 수
       spaceBetween: 20, // 슬라이드 간 간격
       loop: true, // 무한 루프
       navigation: {

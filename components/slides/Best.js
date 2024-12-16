@@ -11,10 +11,13 @@ class BestProductComponent extends HTMLElement {
       // 데이터 가져오기
       const allProducts = await fetchProducts();
 
-      // `tag` 배열에 `BEST`가 포함된 상품만 필터링
-      this.products = Object.values(allProducts).filter((product) =>
-        product.tag.includes("BEST")
-      );
+      // "BEST" 태그를 가진 상품만 필터링
+      this.products = allProducts
+        .filter(
+          (product) =>
+            Array.isArray(product.tags) && product.tags.includes("BEST")
+        )
+        .slice(0, 10); // 최신 10개 상품만 가져오기
 
       this.render();
       this.addEventListeners();
@@ -50,10 +53,10 @@ class BestProductComponent extends HTMLElement {
     return this.products
       .map(
         (product) => `
-          <div class="product-card" data-id="${product.id}">
+          <div class="product-card" data-id="${product.id || "N/A"}">
             <div class="product-image-wrapper">
-            <img src="${product.images[0]}" alt="${
-          product.name
+              <img src="${product.images?.[0] || "placeholder.jpg"}" alt="${
+          product.name || "상품 이미지"
         }" class="product-image" />
               <div class="hover-icons">
                 <i class="fa fa-heart wish-icon"></i>
@@ -62,11 +65,19 @@ class BestProductComponent extends HTMLElement {
             </div>
             
             <div class="product-info">
-              <span>${product.name}</span>          
-              <span class="price">${product.price.toLocaleString()} 원</span>
-              <span class="bestTag">${
-                product.tag.find((tag) => tag === "BEST") || ""
+              <span class="product-name">${
+                product.name || "상품명 없음"
+              }</span>          
+              <span class="price">${
+                product.price
+                  ? product.price.toLocaleString() + " 원"
+                  : "가격 정보 없음"
               }</span>
+              ${
+                product.tags?.includes("BEST")
+                  ? `<span class="bestTag">BEST</span>`
+                  : ""
+              }
             </div>
           </div>
         `

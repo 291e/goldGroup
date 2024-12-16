@@ -6,10 +6,19 @@ class RecommendComponent extends HTMLElement {
       // JSON 데이터 가져오기
       const allProducts = await fetchProducts();
 
-      // 추천 상품 필터링 (임의로 tag에 "BEST"를 포함하는 상품을 추천으로 설정)
-      const products = Object.values(allProducts).filter(
-        (product) => product.tag
-      );
+      // "BEST" 태그를 가진 상품만 필터링
+      const products = allProducts
+        .filter(
+          (product) =>
+            Array.isArray(product.tags) && product.tags.includes("BEST")
+        )
+        .slice(0, 10); // 최신 10개 상품만 가져오기
+
+      // 데이터가 비어있을 경우 처리
+      if (products.length === 0) {
+        this.innerHTML = `<p>추천할 상품이 없습니다.</p>`;
+        return;
+      }
 
       // HTML 구조 생성
       this.innerHTML = `
@@ -19,37 +28,7 @@ class RecommendComponent extends HTMLElement {
             <span>황금단이 추천하는 상품</span>
           </div>
           <div class="swiper-wrapper">
-            ${products
-              .map(
-                (product) => `
-                  <div class="swiper-slide">
-                    <div class="product" data-id="${product.id}">
-                      <div class="product-image-wrapper">
-                      <img src="${product.images[0]}" alt="${
-                  product.name
-                }" class="product-image">
-                      <div class="product-overlay">
-                        <div class="product-info">
-                          <span>${product.name}</span>          
-                          <span class="price">${product.price.toLocaleString()} 원</span>
-                          <div class="tagBox">
-                          ${product.tag
-                            .map(
-                              (tag) =>
-                                `<span class="${
-                                  tag === "NEW" ? "newTag" : "bestTag"
-                                }">${tag}</span>`
-                            )
-                            .join("")}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                `
-              )
-              .join("")}
+            ${this.renderProducts(products)}
           </div>
           <!-- 네비게이션 버튼 -->
           <div class="swiper-button-prev"></div>
@@ -79,18 +58,64 @@ class RecommendComponent extends HTMLElement {
       });
 
       // 상품 클릭 이벤트 추가
-      this.querySelectorAll(".product").forEach((product) => {
-        product.addEventListener("click", (e) => {
-          const productId = e.currentTarget.dataset.id;
-          if (productId) {
-            window.location.href = `./product.html?id=${productId}`;
-          }
-        });
-      });
+      this.addEventListeners();
     } catch (error) {
       console.error("Failed to load recommended products:", error);
       this.innerHTML = `<p>추천 상품 데이터를 불러오는 데 실패했습니다.</p>`;
     }
+  }
+
+  // 상품 리스트 HTML 생성
+  renderProducts(products) {
+    return products
+      .map(
+        (product) => `
+          <div class="swiper-slide">
+            <div class="product" data-id="${product.id || "N/A"}">
+              <div class="product-image-wrapper">
+                <img src="${product.images?.[0] || "placeholder.jpg"}" alt="${
+          product.name || "상품 이미지"
+        }" class="product-image">
+                <div class="product-overlay">
+                  <div class="product-info">
+                    <span>${product.name || "상품명 없음"}</span>          
+                    <span class="price">${
+                      product.price
+                        ? product.price.toLocaleString() + " 원"
+                        : "가격 정보 없음"
+                    }</span>
+                    <div class="tagBox">
+                      ${
+                        product.tags
+                          ?.map(
+                            (tag) =>
+                              `<span class="${
+                                tag === "NEW" ? "newTag" : "bestTag"
+                              }">${tag}</span>`
+                          )
+                          .join("") || ""
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  // 클릭 이벤트 추가
+  addEventListeners() {
+    this.querySelectorAll(".product").forEach((productElement) => {
+      productElement.addEventListener("click", (e) => {
+        const productId = e.currentTarget.dataset.id;
+        if (productId) {
+          window.location.href = `./product.html?id=${productId}`;
+        }
+      });
+    });
   }
 }
 
