@@ -1,4 +1,5 @@
 import { fetchProducts } from "../api/api.js"; // JSON 데이터를 가져오는 API 함수
+import { formatImagePath } from "../components/utils/image.js";
 
 class HanbokComponent extends HTMLElement {
   constructor() {
@@ -6,19 +7,23 @@ class HanbokComponent extends HTMLElement {
     this.products = [];
     this.category = ""; // 카테고리 변수
     this.title = ""; // 제목 변수
+    this.currentPage = 1; // 현재 페이지
+    this.itemsPerPage = 15; // 페이지당 항목 수
   }
 
   async connectedCallback() {
     // 현재 카테고리 가져오기 (HTML 속성에서 추출)
-    this.category = this.getAttribute("data-category") || "혼주한복";
+    this.category = this.getAttribute("data-category") || "혼주";
     this.title = this.getAttribute("data-title") || `${this.category} 한복`;
 
     try {
       // 데이터 가져오기
       const allProducts = await fetchProducts();
       console.log("allProducts: ", allProducts);
-      this.products = Object.values(allProducts).filter(
-        (product) => product.category === this.category
+      this.products = allProducts.filter(
+        (product) =>
+          product.category?.trim().toLowerCase() ===
+          this.category.trim().toLowerCase()
       );
 
       this.render();
@@ -30,6 +35,10 @@ class HanbokComponent extends HTMLElement {
   }
 
   render() {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    const paginatedProducts = this.products.slice(start, end);
+
     this.innerHTML = `
         <div class="hanbok-container">
           <!-- 제목 -->
@@ -55,37 +64,30 @@ class HanbokComponent extends HTMLElement {
   
           <!-- 상품 리스트 -->
           <div class="product-grid">
-            ${this.renderProducts()}
+            ${this.renderProducts(paginatedProducts)}
           </div>
   
           <!-- 페이지네이션 -->
           <div class="pagination-hanbok">
-            <button class="pagination-btn" data-page="first"><<</button>
-            <button class="pagination-btn" data-page="prev"><</button>
-            <span class="page-numbers">
-                <!-- 페이지 번호 -->
-            </span>
-            <button class="pagination-btn" data-page="next">></button>
-            <button class="pagination-btn" data-page="last">>></button>
+            ${this.renderPagination()}
           </div>
         </div>
       `;
   }
 
-  // 상품 그리드 렌더링
-  renderProducts() {
-    if (this.products.length === 0) {
+  renderProducts(products) {
+    if (products.length === 0) {
       return `<p>등록된 제품이 없습니다.</p>`;
     }
 
-    return this.products
+    return products
       .map(
         (product) => `
           <div class="product-card">
             <div class="product-image-wrapper">
-              <img src="${product.images[0]}" alt="${
-          product.name
-        }" class="product-image" />
+              <img src="${formatImagePath(product.images?.[0])}" alt="${
+          product.name || "상품 이미지"
+        }" alt="${product.name}" class="product-image" />
               <div class="hover-icons">
                 <i class="fa fa-heart wish-icon"></i>
                 <i class="fa fa-shopping-cart cart-icon"></i>
@@ -101,24 +103,79 @@ class HanbokComponent extends HTMLElement {
       .join("");
   }
 
-  // 이벤트 추가
+  renderPagination() {
+    const totalPages = Math.ceil(this.products.length / this.itemsPerPage);
+    let buttons = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+      buttons += `
+        <button class="pagination-btn ${
+          i === this.currentPage ? "active" : ""
+        }" data-page="${i}">${i}</button>
+      `;
+    }
+
+    return `
+      <button class="pagination-btn" data-page="first"><<</button>
+      <button class="pagination-btn" data-page="prev"><</button>
+      ${buttons}
+      <button class="pagination-btn" data-page="next">></button>
+      <button class="pagination-btn" data-page="last">>></button>
+    `;
+  }
+
   addEventListeners() {
+    // 필터 이벤트
     const filterSelect = this.querySelector("#filter-select");
     filterSelect.addEventListener("change", (e) => {
       const filterValue = e.target.value;
       this.applyFilter(filterValue);
     });
 
+    // 페이지네이션 이벤트
+    const paginationButtons = this.querySelectorAll(".pagination-btn");
+    paginationButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const action = e.target.dataset.page;
+        this.handlePagination(action);
+      });
+    });
+
+    // 상품 클릭 이벤트
     const productCards = this.querySelectorAll(".product-card");
     productCards.forEach((card, index) => {
       card.addEventListener("click", () => {
-        const productId = this.products[index].id;
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const productId = this.products[start + index].id;
         window.location.href = `product.html?id=${productId}`;
       });
     });
   }
 
-  // 필터 적용
+  handlePagination(action) {
+    const totalPages = Math.ceil(this.products.length / this.itemsPerPage);
+
+    switch (action) {
+      case "first":
+        this.currentPage = 1;
+        break;
+      case "prev":
+        if (this.currentPage > 1) this.currentPage--;
+        break;
+      case "next":
+        if (this.currentPage < totalPages) this.currentPage++;
+        break;
+      case "last":
+        this.currentPage = totalPages;
+        break;
+      default:
+        this.currentPage = parseInt(action, 10);
+    }
+
+    this.render();
+    this.addEventListeners();
+  }
+
   applyFilter(filter) {
     switch (filter) {
       case "new":
@@ -134,8 +191,9 @@ class HanbokComponent extends HTMLElement {
         this.products.sort((a, b) => b.price - a.price); // 높은 가격 순
         break;
     }
+    this.currentPage = 1; // 필터 적용 시 첫 페이지로 이동
     this.render();
-    this.addEventListeners(); // 필터 변경 후 다시 이벤트 추가
+    this.addEventListeners(); // 필터 변경 후 이벤트 다시 추가
   }
 }
 

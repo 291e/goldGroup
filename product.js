@@ -11,7 +11,7 @@ const productPage = document.getElementById("product-page");
 // 상품 데이터 렌더링 함수
 function renderProduct(product) {
   const images = product.images || [];
-  const detailImages = product.detailImages || [];
+  const detailImages = product.detail_images || [];
 
   productPage.innerHTML = `
   <div class="product-main">
@@ -83,6 +83,7 @@ function renderProduct(product) {
                   <img src="public/metaStyle.png" alt="메타스타일링">
                 </a>
                 </div>
+                
               </div>
             </div>
             <div class="result-image">
@@ -186,32 +187,54 @@ async function initializeProductPage() {
       // 초기화 함수 호출
       addScrollMenu();
 
-      // 이벤트 리스너 추가
+      // 요소 선택
       const thumbnails = productPage.querySelectorAll(".thumbnail");
       const mainImage = productPage.querySelector(".product-image");
+      const faceInput = productPage.querySelector("#face-input");
+      const generateButton = productPage.querySelector("#generate-button");
+      const resultImage = document.querySelector("#generated-image");
+
+      // 로딩 애니메이션 요소
+      const loadingAnimation = document.createElement("div");
+      loadingAnimation.id = "loading";
+      loadingAnimation.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>합성 중...</p>
+      `;
+      loadingAnimation.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        z-index: 9999;
+        display: none;
+      `;
+      document.body.appendChild(loadingAnimation);
 
       // 합성 이미지 상태 저장 변수
       let isImageSwapped = false;
 
-      thumbnails.forEach((thumbnail, index) => {
-        thumbnail.addEventListener("click", () => {
-          // 합성된 이미지가 이미 적용되어 있으면 썸네일 클릭 이벤트 무시
-          if (isImageSwapped) {
-            console.log("합성 이미지 상태에서는 썸네일 클릭을 무시합니다.");
-            return;
-          }
+      // // 썸네일 클릭 이벤트
+      // thumbnails.forEach((thumbnail, index) => {
+      //   thumbnail.addEventListener("click", () => {
+      //     if (isImageSwapped) {
+      //       console.log("합성 이미지 상태에서는 썸네일 클릭을 무시합니다.");
+      //       return;
+      //     }
 
-          // 메인 이미지를 해당 썸네일 이미지로 변경
-          mainImage.src = product.images[index];
-          thumbnails.forEach((thumb) => thumb.classList.remove("active"));
-          thumbnail.classList.add("active");
-        });
-      });
+      //     mainImage.src = product.images[index];
+      //     thumbnails.forEach((thumb) => thumb.classList.remove("active"));
+      //     thumbnail.classList.add("active");
+      //   });
+      // });
 
-      // '생성하기' 버튼 클릭 이벤트 수정
+      // '생성하기' 버튼 클릭 이벤트
       generateButton.addEventListener("click", async function () {
         const faceFile = faceInput.files[0];
-        const uploadIcon = document.querySelector("#upload-icon");
 
         if (!faceFile) {
           alert("얼굴 사진을 업로드해주세요.");
@@ -219,10 +242,12 @@ async function initializeProductPage() {
         }
 
         try {
+          // 로딩 애니메이션 시작
+          loadingAnimation.style.display = "block";
+
           const formData = new FormData();
           formData.append("face_file", faceFile);
 
-          // 메인 이미지 가져오기
           const response = await fetch(mainImage.src, {
             method: "GET",
             headers: { "ngrok-skip-browser-warning": "69420" },
@@ -253,18 +278,20 @@ async function initializeProductPage() {
           if (responseData.image_base64) {
             const base64Image = responseData.image_base64;
 
-            // 메인 이미지 및 결과 이미지 업데이트
             mainImage.src = `data:image/png;base64,${base64Image}`;
             resultImage.src = `data:image/png;base64,${base64Image}`;
             resultImage.style.display = "block";
+            resultImage.style.border = "none";
 
-            // 합성 이미지 상태 플래그 설정
             isImageSwapped = true;
             console.log("합성 이미지 적용 완료!");
           }
         } catch (error) {
           console.error("Error during face swap process:", error.message);
           alert("오류가 발생했습니다. 다시 시도해주세요.");
+        } finally {
+          // 로딩 애니메이션 종료
+          loadingAnimation.style.display = "none";
         }
       });
 
@@ -283,12 +310,7 @@ async function initializeProductPage() {
         ).toLocaleString()}원`;
       });
 
-      // 라벨 업로드 및 결과물 처리
-      const faceInput = productPage.querySelector("#face-input");
-      const generateButton = productPage.querySelector("#generate-button");
-      const resultImage = document.querySelector("#generated-image");
-
-      // 파일 업로드 및 미리보기 설정
+      // 파일 업로드 및 미리보기
       faceInput.addEventListener("change", function () {
         const file = faceInput.files[0];
         const uploadUi = document.querySelector(".upload-ui");
@@ -299,143 +321,11 @@ async function initializeProductPage() {
           reader.onload = function (e) {
             uploadUi.style.backgroundImage = `url(${e.target.result})`;
             uploadUi.style.border = "none";
-            uploadIcon.style.display = "none"; // 아이콘 숨기기
+            uploadIcon.style.display = "none";
           };
           reader.readAsDataURL(file);
         }
       });
-
-      // '생성하기' 버튼 클릭 이벤트 (메인 이미지만 처리)
-      generateButton.addEventListener("click", async function () {
-        const faceFile = faceInput.files[0];
-        const mainImage = document.querySelector(".product-image"); // 메인 이미지 선택
-        const uploadIcon = document.querySelector("#upload-icon");
-
-        if (!faceFile) {
-          alert("얼굴 사진을 업로드해주세요.");
-          console.warn("얼굴 사진이 선택되지 않았습니다.");
-          return;
-        }
-
-        try {
-          console.log(`메인 이미지 처리 중: ${mainImage.src}`);
-
-          // FormData 준비
-          const formData = new FormData();
-          formData.append("face_file", faceFile);
-
-          // 메인 이미지 Blob 생성
-          const response = await fetch(mainImage.src, {
-            method: "GET",
-            headers: { "ngrok-skip-browser-warning": "69420" }, // ngrok 경고 우회
-          });
-
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch target file: ${response.statusText}`
-            );
-          }
-
-          const blob = await response.blob();
-          const targetFile = new File([blob], "main_image.jpg", {
-            type: blob.type,
-          });
-          formData.append("target_file", targetFile);
-
-          // 서버에 요청 전송
-          console.log("서버 요청 전송 중...");
-          const serverResponse = await fetch(
-            "http://110.10.182.81:5001/run_workflow/face_swap",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          if (!serverResponse.ok) {
-            const errorText = await serverResponse.text();
-            console.error("서버 응답 에러:", errorText);
-            throw new Error(`Server Error: ${serverResponse.statusText}`);
-          }
-
-          const responseData = await serverResponse.json();
-          if (responseData.image_base64) {
-            const base64Image = responseData.image_base64;
-
-            // 메인 이미지 업데이트
-            mainImage.src = `data:image/png;base64,${base64Image}`;
-            resultImage.src = `data:image/png;base64,${base64Image}`;
-            resultImage.style.display = "block";
-
-            console.log("메인 이미지 변환 완료!");
-            alert("메인 이미지가 성공적으로 합성되었습니다.");
-          } else {
-            console.warn("서버 응답에 image_base64가 없습니다.");
-          }
-        } catch (error) {
-          console.error("Error during face swap process:", error.message);
-          alert("오류가 발생했습니다. 다시 시도해주세요.");
-        }
-      });
-
-      function showModal(base64Image) {
-        const modal = document.createElement("div");
-        modal.className = "modal";
-        modal.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background-color: rgba(0, 0, 0, 0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 9999;
-        `;
-
-        const modalContent = document.createElement("div");
-        modalContent.style.cssText = `
-          width:50%;
-          height:50%;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        `;
-
-        const image = document.createElement("img");
-        image.src = `data:image/png;base64,${base64Image}`;
-        image.style.cssText = `
-          max-width: auto;
-          max-height: 100%;
-          border-radius: 8px;
-        `;
-
-        const downloadButton = document.createElement("a");
-        downloadButton.href = image.src;
-        downloadButton.download = "generated_image.png";
-        downloadButton.textContent = "이미지 다운로드";
-        downloadButton.style.cssText = `
-          margin-top: 10px;
-          padding: 10px 20px;
-          background-color: #ff9800;
-          color: white;
-          text-decoration: none;
-          border-radius: 5px;
-          font-weight: bold;
-        `;
-
-        modalContent.appendChild(image);
-        modalContent.appendChild(downloadButton);
-        modal.appendChild(modalContent);
-
-        modal.addEventListener("click", () => {
-          document.body.removeChild(modal);
-        });
-
-        document.body.appendChild(modal);
-      }
     } else {
       productPage.innerHTML = `<h1>404 - 상품을 찾을 수 없습니다.</h1>`;
     }
