@@ -1,4 +1,5 @@
 import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
+import { formatImagePath } from "../utils/image.js";
 
 class BestProductComponent extends HTMLElement {
   constructor() {
@@ -55,7 +56,7 @@ class BestProductComponent extends HTMLElement {
         (product) => `
           <div class="product-card" data-id="${product.id || "N/A"}">
             <div class="product-image-wrapper">
-              <img src="${product.images?.[0] || "placeholder.jpg"}" alt="${
+              <img src="${formatImagePath(product.images?.[0])}" alt="${
           product.name || "상품 이미지"
         }" class="product-image" />
               <div class="hover-icons">

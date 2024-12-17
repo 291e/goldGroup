@@ -1,5 +1,7 @@
+import { fetchUserProfile, logoutUser } from "../../api/auth.js";
+
 class HeaderComponent extends HTMLElement {
-  connectedCallback() {
+  async connectedCallback() {
     const menuItems = [
       { name: "BRAND", link: "brand.html" },
       { name: "혼주한복", link: "product/honju.html" },
@@ -13,6 +15,20 @@ class HeaderComponent extends HTMLElement {
       { name: "협찬", link: "sponsorship.html" },
       { name: "COMMUNITY", link: "community.html" },
     ];
+
+    let isLoggedIn = false;
+    let profileLink = "user/login.html";
+
+    // 로그인 상태 확인
+    try {
+      const user = await fetchUserProfile();
+      if (user) {
+        isLoggedIn = true;
+        profileLink = "user/profile.html";
+      }
+    } catch (error) {
+      console.warn("Not logged in or session expired.");
+    }
 
     this.innerHTML = `
       <div class="header">
@@ -31,6 +47,8 @@ class HeaderComponent extends HTMLElement {
               )
               .join("")}
           </nav>
+
+          <a href="${profileLink}"><i class="fa-regular fa-user"></i></a>
 
           <!-- 햄버거 메뉴 -->
           <div class="hamburger-icon">

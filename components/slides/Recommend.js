@@ -1,4 +1,5 @@
 import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
+import { formatImagePath } from "../utils/image.js";
 
 class RecommendComponent extends HTMLElement {
   async connectedCallback() {
@@ -73,9 +74,10 @@ class RecommendComponent extends HTMLElement {
           <div class="swiper-slide">
             <div class="product" data-id="${product.id || "N/A"}">
               <div class="product-image-wrapper">
-                <img src="${product.images?.[0] || "placeholder.jpg"}" alt="${
+                <img src="${formatImagePath(product.images?.[0])}" alt="${
           product.name || "상품 이미지"
         }" class="product-image">
+
                 <div class="product-overlay">
                   <div class="product-info">
                     <span>${product.name || "상품명 없음"}</span>          

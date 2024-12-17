@@ -6,8 +6,8 @@ export async function fetchProducts() {
     const response = await fetch(BASE_URL, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json", // JSON 데이터 요청
-        "ngrok-skip-browser-warning": "69420", // ngrok 브라우저 경고 우회
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
       },
     });
 
@@ -15,11 +15,11 @@ export async function fetchProducts() {
       throw new Error(`Failed to fetch products: ${response.status}`);
     }
 
-    const products = await response.json(); // JSON 데이터 파싱
+    const products = await response.json();
     return products;
   } catch (error) {
     console.error("Error fetching products:", error.message);
-    return []; // 오류 발생 시 빈 배열 반환
+    return [];
   }
 }
 
@@ -40,11 +40,11 @@ export async function fetchProductById(id) {
       );
     }
 
-    const product = await response.json(); // JSON 데이터 파싱
+    const product = await response.json();
     return product;
   } catch (error) {
     console.error(`Error fetching product with ID ${id}:`, error.message);
-    return null; // 오류 발생 시 null 반환
+    return null;
   }
 }
 
@@ -57,7 +57,7 @@ export async function createProduct(productData) {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "69420",
       },
-      body: JSON.stringify(productData), // JSON 형식으로 변환
+      body: JSON.stringify(productData),
     });
 
     if (!response.ok) {
@@ -115,9 +115,59 @@ export async function deleteProduct(id) {
       );
     }
 
-    return true; // 삭제 성공 시 true 반환
+    return true;
   } catch (error) {
     console.error(`Error deleting product with ID ${id}:`, error.message);
     return false;
+  }
+}
+
+// 검색(Search) 상품 가져오기
+export async function searchProducts(query) {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/search?query=${encodeURIComponent(query)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "69420",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to search products: ${response.status}`);
+    }
+
+    const products = await response.json();
+    return products;
+  } catch (error) {
+    console.error("Error searching products:", error.message);
+    return [];
+  }
+}
+
+// 필터(Filter) 상품 가져오기
+export async function filterProducts(filters) {
+  try {
+    const queryString = new URLSearchParams(filters).toString();
+    const response = await fetch(`${BASE_URL}/filter?${queryString}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "69420",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to filter products: ${response.status}`);
+    }
+
+    const products = await response.json();
+    return products;
+  } catch (error) {
+    console.error("Error filtering products:", error.message);
+    return [];
   }
 }
