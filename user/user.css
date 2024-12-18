@@ -189,3 +189,28 @@ input[type="checkbox"] {
   display: flex;
   justify-content: space-between;
 }
+
+.profile-section {
+  text-align: center;
+  margin: 50px auto;
+  max-width: 500px;
+}
+
+.user-info {
+  margin-bottom: 20px;
+}
+
+.logout-button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+  background-color: #e60000;
+}

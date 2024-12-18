@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>로그인</title>
+    <title>프로필 페이지</title>
     <base href="http://goldsilk.metashopping.kr/goldGroup/" />
 
     <link
@@ -17,13 +17,19 @@
     <header-component></header-component>
 
     <div class="container">
-      <div>My Page</div>
+      <div class="profile-section">
+        <h1>My Page</h1>
+        <div class="user-info">
+          <p id="username">사용자 이름: <span>로딩 중...</span></p>
+          <p id="email">이메일: <span>로딩 중...</span></p>
+        </div>
+        <button id="logout-button" class="logout-button">로그아웃</button>
+      </div>
     </div>
 
     <footer-component></footer-component>
 
     <script type="module" src="components/layout/layout.js"></script>
-
-    <script type="module" src="user/login.js"></script>
+    <script type="module" src="user/profile.js"></script>
   </body>
 </html>

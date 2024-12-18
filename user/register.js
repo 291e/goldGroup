@@ -1,4 +1,4 @@
-import { registerUser } from "../api/auth.js";
+import { registerUser, loginUser } from "../api/auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const registerForm = document.getElementById("registerForm");
@@ -27,12 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // 개별 체크박스 이벤트 리스너
   allCheckboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
-      const allChecked = allCheckboxes.every((cb) => cb.checked);
-      agreeAllCheckbox.checked = allChecked; // 하나라도 해제되면 전체 체크 해제
+      agreeAllCheckbox.checked = allCheckboxes.every((cb) => cb.checked);
     });
   });
 
-  // 개별 필수 체크박스 검사
+  // 필수 체크박스 검사
   function areRequiredCheckboxesChecked() {
     return termsCheckbox.checked && privacyCheckbox.checked;
   }
@@ -89,6 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // 자동 로그인 시도
         const loginResult = await loginUser({ email, password });
         if (loginResult) {
+          localStorage.setItem("access_token", loginResult.access_token);
+          localStorage.setItem("refresh_token", loginResult.refresh_token);
+
           registerMessage.innerText =
             "회원가입 및 자동 로그인 성공! 메인 페이지로 이동합니다.";
           setTimeout(() => {

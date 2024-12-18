@@ -1,4 +1,4 @@
-import { loginUser } from "../api/auth.js";
+import { loginUser, fetchUserProfile } from "../api/auth.js";
 
 // DOM이 로드된 후 실행
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,25 +26,36 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 로그인 요청
-    const result = await loginUser({ email, password });
+    try {
+      // 로그인 요청
+      const result = await loginUser({ email, password });
 
-    if (result) {
-      loginMessage.innerText = "로그인 성공! 메인 페이지로 이동합니다.";
+      if (result) {
+        loginMessage.innerText = "로그인 성공! 메인 페이지로 이동합니다.";
 
-      // 아이디 저장 여부 확인
-      if (rememberMe.checked) {
-        localStorage.setItem("savedEmail", email); // 아이디 저장
+        // 아이디 저장 여부 확인
+        if (rememberMe.checked) {
+          localStorage.setItem("savedEmail", email); // 아이디 저장
+        } else {
+          localStorage.removeItem("savedEmail"); // 체크 해제 시 저장된 아이디 삭제
+        }
+
+        // 로그인 성공 시 프로필 정보 확인
+        const userProfile = await fetchUserProfile();
+        if (userProfile) {
+          console.log("User Profile:", userProfile);
+        }
+
+        setTimeout(() => {
+          window.location.href = "http://goldsilk.metashopping.kr/goldGroup/";
+        }, 1000);
       } else {
-        localStorage.removeItem("savedEmail"); // 체크 해제 시 저장된 아이디 삭제
+        loginMessage.innerText =
+          "로그인 실패! 이메일 또는 비밀번호를 확인해주세요.";
       }
-
-      setTimeout(() => {
-        window.location.href = "http://goldsilk.metashopping.kr/goldGroup/";
-      }, 1000);
-    } else {
-      loginMessage.innerText =
-        "로그인 실패! 이메일 또는 비밀번호를 확인해주세요.";
+    } catch (error) {
+      console.error("Login Error:", error.message);
+      loginMessage.innerText = "로그인 실패! 서버 오류가 발생했습니다.";
     }
   });
 });

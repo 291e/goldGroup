@@ -1,4 +1,4 @@
-import { fetchUserProfile, logoutUser } from "../../api/auth.js";
+import { fetchUserProfile } from "../../api/auth.js";
 
 class HeaderComponent extends HTMLElement {
   async connectedCallback() {
@@ -16,18 +16,17 @@ class HeaderComponent extends HTMLElement {
       { name: "COMMUNITY", link: "community.html" },
     ];
 
-    let isLoggedIn = false;
-    let profileLink = "user/login.html";
+    let profileLink = "user/login.html"; // 기본 로그인 링크 설정
 
     // 로그인 상태 확인
     try {
       const user = await fetchUserProfile();
       if (user) {
-        isLoggedIn = true;
-        profileLink = "user/profile.html";
+        profileLink = "user/profile.html"; // 로그인된 경우 프로필 페이지
       }
     } catch (error) {
-      console.warn("Not logged in or session expired.");
+      console.warn("User not logged in or session expired.");
+      localStorage.removeItem("token"); // 문제가 있는 토큰 삭제
     }
 
     this.innerHTML = `
@@ -48,7 +47,10 @@ class HeaderComponent extends HTMLElement {
               .join("")}
           </nav>
 
-          <a href="${profileLink}"><i class="fa-regular fa-user"></i></a>
+          <!-- 사용자 아이콘 -->
+          <a class="user-icon" href="${profileLink}">
+            <i class="fa-regular fa-user"></i>
+          </a>
 
           <!-- 햄버거 메뉴 -->
           <div class="hamburger-icon">

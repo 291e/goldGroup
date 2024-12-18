@@ -1,5 +1,5 @@
 import { fetchProducts } from "../api/api.js"; // JSON 데이터를 가져오는 API 함수
-import { formatImagePath } from "../components/utils/image.js";
+import { formatImagePath } from "../utils/image.js";
 
 class HanbokComponent extends HTMLElement {
   constructor() {
@@ -19,14 +19,15 @@ class HanbokComponent extends HTMLElement {
     try {
       // 데이터 가져오기
       const allProducts = await fetchProducts();
-      console.log("allProducts: ", allProducts);
+
+      // 카테고리 필터링
       this.products = allProducts.filter(
         (product) =>
           product.category?.trim().toLowerCase() ===
           this.category.trim().toLowerCase()
       );
 
-      this.render();
+      await this.render(); // 렌더링 (비동기 이미지 처리)
       this.addEventListeners();
     } catch (error) {
       console.error("Failed to load products:", error);
@@ -34,60 +35,64 @@ class HanbokComponent extends HTMLElement {
     }
   }
 
-  render() {
+  async render() {
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
     const paginatedProducts = this.products.slice(start, end);
 
     this.innerHTML = `
-        <div class="hanbok-container">
-          <!-- 제목 -->
-          <div class="hanbok-header">
-            <h1 class="hanbok-title">${this.title}</h1>
-            <div class="hanbok-controls">
-              <span class="product-count">등록 제품: ${
-                this.products.length
-              }개</span>
-              <div class="filter">
-                <select id="filter-select">
-                  <option value="new">신상품</option>
-                  <option value="name">상품명</option>
-                  <option value="low-price">낮은 가격</option>
-                  <option value="high-price">높은 가격</option>
-                </select>
-              </div>
+      <div class="hanbok-container">
+        <!-- 제목 -->
+        <div class="hanbok-header">
+          <h1 class="hanbok-title">${this.title}</h1>
+          <div class="hanbok-controls">
+            <span class="product-count">등록 제품: ${
+              this.products.length
+            }개</span>
+            <div class="filter">
+              <select id="filter-select">
+                <option value="new">신상품</option>
+                <option value="name">상품명</option>
+                <option value="low-price">낮은 가격</option>
+                <option value="high-price">높은 가격</option>
+              </select>
             </div>
           </div>
-  
-          <!-- 분리선 -->
-          <hr class="divider" />
-  
-          <!-- 상품 리스트 -->
-          <div class="product-grid">
-            ${this.renderProducts(paginatedProducts)}
-          </div>
-  
-          <!-- 페이지네이션 -->
-          <div class="pagination-hanbok">
-            ${this.renderPagination()}
-          </div>
         </div>
-      `;
+
+        <!-- 분리선 -->
+        <hr class="divider" />
+
+        <!-- 상품 리스트 -->
+        <div class="product-grid">
+          ${await this.renderProducts(paginatedProducts)}
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination-hanbok">
+          ${this.renderPagination()}
+        </div>
+      </div>
+    `;
+
+    this.addEventListeners(); // 렌더링 후 이벤트 리스너 추가
   }
 
-  renderProducts(products) {
+  async renderProducts(products) {
     if (products.length === 0) {
       return `<p>등록된 제품이 없습니다.</p>`;
     }
 
-    return products
-      .map(
-        (product) => `
+    // 비동기적으로 이미지 경로 처리
+    const renderedProducts = await Promise.all(
+      products.map(async (product) => {
+        const imagePath = await formatImagePath(product.images?.[0]);
+        return `
           <div class="product-card">
             <div class="product-image-wrapper">
-              <img src="${formatImagePath(product.images?.[0])}" alt="${
+              <img src="${imagePath}" alt="${
           product.name || "상품 이미지"
-        }" alt="${product.name}" class="product-image" />
+        }" class="product-image" />
               <div class="hover-icons">
                 <i class="fa fa-heart wish-icon"></i>
                 <i class="fa fa-shopping-cart cart-icon"></i>
@@ -98,9 +103,11 @@ class HanbokComponent extends HTMLElement {
               <span class="product-price">${product.price.toLocaleString()} 원</span>
             </div>
           </div>
-        `
-      )
-      .join("");
+        `;
+      })
+    );
+
+    return renderedProducts.join("");
   }
 
   renderPagination() {
@@ -146,8 +153,8 @@ class HanbokComponent extends HTMLElement {
     productCards.forEach((card, index) => {
       card.addEventListener("click", () => {
         const start = (this.currentPage - 1) * this.itemsPerPage;
-        const productId = this.products[start + index].id;
-        window.location.href = `product.html?id=${productId}`;
+        const productId = this.products[start + index].product_id;
+        window.location.href = `product.html?product_id=${productId}`;
       });
     });
   }
@@ -173,13 +180,12 @@ class HanbokComponent extends HTMLElement {
     }
 
     this.render();
-    this.addEventListeners();
   }
 
   applyFilter(filter) {
     switch (filter) {
       case "new":
-        this.products.sort((a, b) => b.id - a.id); // 신상품 순
+        this.products.sort((a, b) => b.product_id - a.product_id); // 신상품 순
         break;
       case "name":
         this.products.sort((a, b) => a.name.localeCompare(b.name)); // 이름 순
@@ -193,7 +199,6 @@ class HanbokComponent extends HTMLElement {
     }
     this.currentPage = 1; // 필터 적용 시 첫 페이지로 이동
     this.render();
-    this.addEventListeners(); // 필터 변경 후 이벤트 다시 추가
   }
 }
 

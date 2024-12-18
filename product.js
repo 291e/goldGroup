@@ -1,34 +1,43 @@
 import { fetchProductById } from "./api/api.js"; // ID로 JSON 데이터를 가져오는 API 함수
-import { formatImagePath } from "./components/utils/image.js";
+import { formatImagePath } from "./utils/image.js";
 
 // URL에서 상품 ID 가져오기
 const urlParams = new URLSearchParams(window.location.search);
-const productId = urlParams.get("id");
+const productId = urlParams.get("product_id"); // URL에서 product_id 가져오기
 
 // 상품 렌더링 컨테이너
 const productPage = document.getElementById("product-page");
 
 // 상품 데이터 렌더링 함수
-function renderProduct(product) {
+async function renderProduct(product) {
   const images = product.images || [];
   const detailImages = product.detail_images || [];
 
+  // 이미지 경로 비동기 처리
+  const formattedImages = await Promise.all(
+    images.map(async (img) => await formatImagePath(img))
+  );
+
+  const formattedDetailImages = await Promise.all(
+    detailImages.map(async (img) => await formatImagePath(img))
+  );
+
   productPage.innerHTML = `
   <div class="product-main">
-    <div id="product-${product.id}" class="product-container">
+    <div id="product-${product.product_id}" class="product-container">
       <!-- 이미지 섹션 -->
       <div class="product-image-section">
         <div class="product-image-wrapper">
-          <img src="${formatImagePath(product.images?.[0])}" alt="${
+          <img src="${formattedImages[0]}" alt="${
     product.name
   }" class="product-image">
         </div>
         <div class="thumbnail-wrapper">
         ${
-          images
+          formattedImages
             .map(
               (img, index) =>
-                `<img src="${formatImagePath(img)}" alt="Thumbnail ${
+                `<img src="${img}" alt="Thumbnail ${
                   index + 1
                 }" class="thumbnail ${index === 0 ? "active" : ""}">`
             )
@@ -62,7 +71,9 @@ function renderProduct(product) {
         <span class="product-total">총 상품금액(수량): ${product.price.toLocaleString()}원 (1개)</span>
         <div class="product-buttons">
           <button class="buy-now">Buy Now</button>
-          <button class="cart">Cart</button>
+          <button class="cart" data-product-id="${
+            product.product_id
+          }">Cart</button>
           <button class="wish">Wish</button>
         </div>
 
@@ -101,12 +112,9 @@ function renderProduct(product) {
   <div id="detail-section" class="content-section" data-section="Detail">
     <div class="detail-image">
     ${
-      detailImages
+      formattedDetailImages
         .map(
-          (img) =>
-            `<img src="${formatImagePath(
-              img
-            )}" alt="디테일 이미지" class="detail-img">`
+          (img) => `<img src="${img}" alt="디테일 이미지" class="detail-img">`
         )
         .join("") || "<p>디테일 이미지가 없습니다.</p>"
     }
@@ -182,11 +190,12 @@ async function initializeProductPage() {
     const product = await fetchProductById(productId); // fetchProductById로 상품 데이터 가져오기
 
     if (product) {
-      renderProduct(product); // 상품 렌더링
+      await renderProduct(product); // 상품 렌더링
 
       // 초기화 함수 호출
       addScrollMenu();
-
+      // 이벤트 추가
+      setupEventListeners(product);
       // 요소 선택
       const thumbnails = productPage.querySelectorAll(".thumbnail");
       const mainImage = productPage.querySelector(".product-image");
@@ -281,7 +290,6 @@ async function initializeProductPage() {
             mainImage.src = `data:image/png;base64,${base64Image}`;
             resultImage.src = `data:image/png;base64,${base64Image}`;
             resultImage.style.display = "block";
-            resultImage.style.border = "none";
 
             isImageSwapped = true;
             console.log("합성 이미지 적용 완료!");
@@ -332,6 +340,18 @@ async function initializeProductPage() {
   } catch (error) {
     console.error("Failed to load product:", error);
     productPage.innerHTML = `<p>상품 데이터를 불러오는 데 실패했습니다.</p>`;
+  }
+  function setupEventListeners(product) {
+    const cartButton = document.querySelector(".cart");
+    cartButton.addEventListener("click", async () => {
+      try {
+        const response = await addToCart(product.product_id, 1);
+        alert("장바구니에 상품이 추가되었습니다.");
+      } catch (error) {
+        console.error("Error adding to cart:", error.message);
+        alert("장바구니 추가에 실패했습니다.");
+      }
+    });
   }
 }
 

@@ -1,5 +1,5 @@
 import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
-import { formatImagePath } from "../utils/image.js";
+import { formatImagePath } from "../../utils/image.js";
 
 class RecommendComponent extends HTMLElement {
   async connectedCallback() {
@@ -21,29 +21,14 @@ class RecommendComponent extends HTMLElement {
         return;
       }
 
-      // HTML 구조 생성
-      this.innerHTML = `
-        <div class="swiper">
-          <div class="swiper-text">
-            <span>추천상품</span>
-            <span>황금단이 추천하는 상품</span>
-          </div>
-          <div class="swiper-wrapper">
-            ${this.renderProducts(products)}
-          </div>
-          <!-- 네비게이션 버튼 -->
-          <div class="swiper-button-prev"></div>
-          <div class="swiper-button-next"></div>
-          <!-- 페이지네이션 -->
-          <div class="swiper-pagination"></div>
-        </div>
-      `;
+      // 이미지 경로 비동기 변환 및 렌더링
+      await this.renderProducts(products);
 
       // Swiper.js 초기화
       new Swiper(".swiper", {
-        slidesPerView: 5, // 한 화면에 보이는 슬라이드 수
-        spaceBetween: 20, // 슬라이드 간 간격
-        loop: true, // 무한 루프
+        slidesPerView: 5,
+        spaceBetween: 20,
+        loop: true,
         navigation: {
           nextEl: ".swiper-button-next",
           prevEl: ".swiper-button-prev",
@@ -53,8 +38,8 @@ class RecommendComponent extends HTMLElement {
           clickable: true,
         },
         autoplay: {
-          delay: 3000, // 자동 슬라이드 간격 (3초)
-          disableOnInteraction: false, // 상호작용 후에도 자동 슬라이드 유지
+          delay: 3000,
+          disableOnInteraction: false,
         },
       });
 
@@ -66,15 +51,17 @@ class RecommendComponent extends HTMLElement {
     }
   }
 
-  // 상품 리스트 HTML 생성
-  renderProducts(products) {
-    return products
-      .map(
-        (product) => `
+  // 상품 리스트 HTML 생성 (비동기 이미지 처리)
+  async renderProducts(products) {
+    const renderedProducts = await Promise.all(
+      products.map(async (product) => {
+        const imagePath = await formatImagePath(product.images?.[0]);
+
+        return `
           <div class="swiper-slide">
-            <div class="product" data-id="${product.id || "N/A"}">
+            <div class="product" data-id="${product.product_id || "N/A"}">
               <div class="product-image-wrapper">
-                <img src="${formatImagePath(product.images?.[0])}" alt="${
+                <img src="${imagePath}" alt="${
           product.name || "상품 이미지"
         }" class="product-image">
 
@@ -103,9 +90,24 @@ class RecommendComponent extends HTMLElement {
               </div>
             </div>
           </div>
-        `
-      )
-      .join("");
+        `;
+      })
+    );
+
+    this.innerHTML = `
+      <div class="swiper">
+        <div class="swiper-text">
+          <span>추천상품</span>
+          <span>황금단이 추천하는 상품</span>
+        </div>
+        <div class="swiper-wrapper">
+          ${renderedProducts.join("")}
+        </div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-pagination"></div>
+      </div>
+    `;
   }
 
   // 클릭 이벤트 추가
@@ -113,8 +115,11 @@ class RecommendComponent extends HTMLElement {
     this.querySelectorAll(".product").forEach((productElement) => {
       productElement.addEventListener("click", (e) => {
         const productId = e.currentTarget.dataset.id;
-        if (productId) {
-          window.location.href = `./product.html?id=${productId}`;
+        console.log("Clicked Product ID:", productId); // product_id 가져오기
+        if (productId && productId !== "N/A") {
+          window.location.href = `./product.html?product_id=${productId}`;
+        } else {
+          alert("유효하지 않은 상품입니다.");
         }
       });
     });

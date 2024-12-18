@@ -1,5 +1,5 @@
 import { fetchProducts } from "../../api/api.js"; // JSON 데이터를 가져오는 API 함수
-import { formatImagePath } from "../utils/image.js";
+import { formatImagePath } from "../../utils/image.js";
 
 class BestProductComponent extends HTMLElement {
   constructor() {
@@ -20,7 +20,7 @@ class BestProductComponent extends HTMLElement {
         )
         .slice(0, 10); // 최신 10개 상품만 가져오기
 
-      this.render();
+      await this.render(); // 비동기 렌더링
       this.addEventListeners();
     } catch (error) {
       console.error("Failed to load best products:", error);
@@ -28,7 +28,8 @@ class BestProductComponent extends HTMLElement {
     }
   }
 
-  render() {
+  // 비동기 렌더링 함수
+  async render() {
     this.innerHTML = `
       <div class="best-product-container">
         <!-- 제목 -->
@@ -39,24 +40,26 @@ class BestProductComponent extends HTMLElement {
         
         <!-- 상품 리스트 -->
         <div class="Products">
-          ${this.renderProducts()}
+          ${await this.renderProducts()}
         </div>
       </div>
     `;
   }
 
-  // 베스트셀러 리스트 렌더링
-  renderProducts() {
+  // 베스트셀러 리스트 렌더링 (비동기 이미지 처리)
+  async renderProducts() {
     if (this.products.length === 0) {
       return `<p>등록된 베스트셀러 상품이 없습니다.</p>`;
     }
 
-    return this.products
-      .map(
-        (product) => `
-          <div class="product-card" data-id="${product.id || "N/A"}">
+    const renderedProducts = await Promise.all(
+      this.products.map(async (product) => {
+        const imagePath = await formatImagePath(product.images?.[0]);
+
+        return `
+          <div class="product-card" data-id="${product.product_id || "N/A"}">
             <div class="product-image-wrapper">
-              <img src="${formatImagePath(product.images?.[0])}" alt="${
+              <img src="${imagePath}" alt="${
           product.name || "상품 이미지"
         }" class="product-image" />
               <div class="hover-icons">
@@ -81,9 +84,11 @@ class BestProductComponent extends HTMLElement {
               }
             </div>
           </div>
-        `
-      )
-      .join("");
+        `;
+      })
+    );
+
+    return renderedProducts.join("");
   }
 
   // 이벤트 추가
@@ -93,7 +98,7 @@ class BestProductComponent extends HTMLElement {
       productElement.addEventListener("click", (e) => {
         const productId = e.currentTarget.dataset.id;
         if (productId) {
-          window.location.href = `product.html?id=${productId}`;
+          window.location.href = `product.html?product_id=${productId}`;
         }
       });
     });
